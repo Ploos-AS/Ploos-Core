@@ -14,7 +14,7 @@ import (
 // Introspector delegates access-token validation to a trusted OAuth server.
 type Introspector struct {
 	endpoint, issuer, audience, clientID, secret string
-	client                                     *http.Client
+	client                                       *http.Client
 }
 
 func NewIntrospector(endpoint, issuer, audience, clientID, secret string) (*Introspector, error) {
