@@ -27,9 +27,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Apply and test
         run: |
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/0001_foundation.up.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/apply.psql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/tests/foundation.sql
       - name: Roll back and reapply
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/0001_foundation.down.sql
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/0001_foundation.up.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/apply.psql
+      - name: Verify repeated migration is safe
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/apply.psql
+          test "$(psql "$DATABASE_URL" -Atc 'SELECT count(*) FROM core_schema_migrations WHERE version = 1')" = 1
