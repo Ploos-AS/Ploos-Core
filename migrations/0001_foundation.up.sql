@@ -85,4 +85,9 @@ CREATE TABLE audit_events (
  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX audit_org_idx ON audit_events(organization_id,created_at);
+CREATE TABLE IF NOT EXISTS core_schema_migrations (
+ version integer PRIMARY KEY,
+ applied_at timestamptz NOT NULL DEFAULT now()
+);
+INSERT INTO core_schema_migrations(version) VALUES (1);
 COMMIT;
