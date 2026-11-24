@@ -1,0 +1,35 @@
+name: PostgreSQL migrations
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test-only
+          POSTGRES_DB: core_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:test-only@localhost:5432/core_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply and test
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/0001_foundation.up.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/tests/foundation.sql
+      - name: Roll back and reapply
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/0001_foundation.down.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/0001_foundation.up.sql
