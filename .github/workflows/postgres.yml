@@ -22,7 +22,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql://postgres:test-only@localhost:5432/core_test
+      DATABASE_URL: postgresql://postgres:test-only@localhost:5432/core_test?sslmode=disable
     steps:
       - uses: actions/checkout@v4
       - name: Apply and test
@@ -37,3 +37,10 @@ jobs:
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/apply.psql
           test "$(psql "$DATABASE_URL" -Atc 'SELECT count(*) FROM core_schema_migrations WHERE version = 1')" = 1
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Runtime database integration
+        run: |
+          go mod verify
+          go test -v ./internal/storage
