@@ -1,0 +1,12 @@
+\set ON_ERROR_STOP on
+-- One session owns the migration lock for the entire run.
+SELECT pg_advisory_lock(74192026);
+CREATE TABLE IF NOT EXISTS core_schema_migrations (
+    version integer PRIMARY KEY,
+    applied_at timestamptz NOT NULL DEFAULT now()
+);
+SELECT NOT EXISTS (SELECT 1 FROM core_schema_migrations WHERE version = 1) AS apply_v1 \gset
+\if :apply_v1
+    \ir 0001_foundation.up.sql
+\endif
+SELECT pg_advisory_unlock(74192026);
