@@ -15,9 +15,9 @@ type Organization struct {
 type OrganizationKind string
 
 const (
-	KindBusiness   OrganizationKind = "business"
+	KindBusiness     OrganizationKind = "business"
 	KindAssociation OrganizationKind = "association"
-	KindIndividual OrganizationKind = "individual"
+	KindIndividual   OrganizationKind = "individual"
 )
 
 func (o Organization) Validate() error {
