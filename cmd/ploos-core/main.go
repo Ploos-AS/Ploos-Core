@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Ploos-AS/Ploos-Core/internal/server"
+	"github.com/Ploos-AS/Ploos-Core/internal/storage"
 )
 
 func main() {
@@ -18,9 +19,20 @@ func main() {
 	if addr == "" {
 		addr = "127.0.0.1:8080"
 	}
+	handler := server.NewHandler()
+	if dsn := os.Getenv("PLOOS_CORE_DATABASE_URL"); dsn != "" {
+		db, err := storage.OpenPostgres(dsn)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+		handler = server.NewHandlerWithReadiness(func(ctx context.Context) error {
+			return storage.CheckSchema(ctx, db)
+		})
+	}
 	s := &http.Server{
 		Addr:              addr,
-		Handler:           server.NewHandler(),
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
