@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"crypto/rand"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
