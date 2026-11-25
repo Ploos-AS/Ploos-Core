@@ -1,0 +1,37 @@
+services:
+  core:
+    image: ${PLOOS_CORE_IMAGE:?set an approved Core image}
+    restart: unless-stopped
+    env_file:
+      - ${PLOOS_CORE_ENV_FILE:?set protected runtime env file}
+    ports:
+      - "127.0.0.1:${PLOOS_CORE_PORT:?choose an unused loopback port}:8080"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: ${PLOOS_POSTGRES_IMAGE:?set an approved PostgreSQL 16 image}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ploos_core
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - core-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "ploos_core"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+secrets:
+  db_password:
+    file: ${PLOOS_DB_PASSWORD_FILE:?set protected database password file}
+volumes:
+  core-db:
