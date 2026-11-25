@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"os"
 
 	"github.com/Ploos-AS/Ploos-Core/internal/auth"
+	"github.com/Ploos-AS/Ploos-Core/internal/domain"
 	"github.com/Ploos-AS/Ploos-Core/internal/storage"
 )
 
-// NewPortalHandler exposes read-only portal APIs behind verified identity.
+// NewPortalHandler exposes portal APIs behind verified identity.
 func NewPortalHandler(db *sql.DB, verifier auth.Verifier) http.Handler {
 	mux := http.NewServeMux()
 	if db == nil || verifier == nil {
@@ -31,5 +33,10 @@ func NewPortalHandler(db *sql.DB, verifier auth.Verifier) http.Handler {
 	mux.Handle("/api/v1/organizations", protect(OrganizationsHandler(func(ctx context.Context, user string) ([]storage.OrganizationSummary, error) {
 		return storage.ListOrganizations(ctx, db, user)
 	})))
+	if os.Getenv("PLOOS_CORE_ORGANIZATION_CREATE_ENABLED") == "true" {
+		mux.Handle("POST /api/v1/organizations", protect(CreateOrganizationHandler(func(ctx context.Context, org domain.Organization, owner string) error {
+			return storage.CreateOrganization(ctx, db, org, owner)
+		})))
+	}
 	return mux
 }
