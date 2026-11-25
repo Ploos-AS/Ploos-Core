@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Ploos-AS/Ploos-Core/internal/auth"
 	"github.com/Ploos-AS/Ploos-Core/internal/server"
 	"github.com/Ploos-AS/Ploos-Core/internal/storage"
 )
@@ -20,6 +21,10 @@ func main() {
 		addr = "127.0.0.1:8080"
 	}
 	handler := server.NewHandler()
+	portal := os.Getenv("PLOOS_CORE_PORTAL_ENABLED") == "true"
+	if portal && os.Getenv("PLOOS_CORE_DATABASE_URL") == "" {
+		log.Fatal("portal requires database configuration")
+	}
 	if dsn := os.Getenv("PLOOS_CORE_DATABASE_URL"); dsn != "" {
 		db, err := storage.OpenPostgres(dsn)
 		if err != nil {
@@ -29,6 +34,20 @@ func main() {
 		handler = server.NewHandlerWithReadiness(func(ctx context.Context) error {
 			return storage.CheckSchema(ctx, db)
 		})
+		if portal {
+			config := auth.Config{
+				Endpoint: os.Getenv("PLOOS_CORE_AUTH_ENDPOINT"),
+				Issuer:   os.Getenv("PLOOS_CORE_AUTH_ISSUER"),
+				Audience: os.Getenv("PLOOS_CORE_AUTH_AUDIENCE"),
+				ClientID: os.Getenv("PLOOS_CORE_AUTH_CLIENT_ID"),
+				Secret:   os.Getenv("PLOOS_CORE_AUTH_SECRET"),
+			}
+			verifier, err := config.Build()
+			if err != nil {
+				log.Fatal("invalid portal authentication configuration")
+			}
+			handler = server.NewPortalHandler(db, verifier)
+		}
 	}
 	s := &http.Server{
 		Addr:              addr,
