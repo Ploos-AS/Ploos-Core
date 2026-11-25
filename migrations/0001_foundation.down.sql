@@ -1,4 +1,5 @@
 BEGIN;
+DELETE FROM core_schema_migrations WHERE version = 4;
 DELETE FROM core_schema_migrations WHERE version = 3;
 DROP TABLE IF EXISTS domains_organization_links;
 DELETE FROM core_schema_migrations WHERE version = 2;
