@@ -15,7 +15,7 @@ func CheckSchema(ctx context.Context, db *sql.DB) error {
 	if err := db.QueryRowContext(ctx, "SELECT COALESCE(max(version), 0) FROM core_schema_migrations").Scan(&version); err != nil {
 		return errors.New("database schema unavailable")
 	}
-	if version != 2 {
+	if version != 3 {
 		return errors.New("unexpected schema version")
 	}
 	return nil

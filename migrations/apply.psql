@@ -13,4 +13,8 @@ SELECT NOT EXISTS (SELECT 1 FROM core_schema_migrations WHERE version = 2) AS ap
 \if :apply_v2
     \ir 0002_domains_links.up.sql
 \endif
+SELECT NOT EXISTS (SELECT 1 FROM core_schema_migrations WHERE version = 3) AS apply_v3 \gset
+\if :apply_v3
+    \ir 0003_outbox_leases.up.sql
+\endif
 SELECT pg_advisory_unlock(74192026);
