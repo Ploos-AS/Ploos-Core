@@ -28,5 +28,8 @@ func NewPortalHandler(db *sql.DB, verifier auth.Verifier) http.Handler {
 	mux.Handle("/api/v1/organizations/{organizationID}/subscriptions", protect(SubscriptionsHandler(func(ctx context.Context, org, user string) ([]storage.SubscriptionSummary, error) {
 		return storage.ListSubscriptions(ctx, db, org, user)
 	})))
+	mux.Handle("/api/v1/organizations", protect(OrganizationsHandler(func(ctx context.Context, user string) ([]storage.OrganizationSummary, error) {
+		return storage.ListOrganizations(ctx, db, user)
+	})))
 	return mux
 }
