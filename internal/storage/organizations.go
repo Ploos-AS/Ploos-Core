@@ -29,6 +29,9 @@ func CreateOrganization(ctx context.Context, db *sql.DB, org domain.Organization
 	if _, err := tx.ExecContext(ctx, "INSERT INTO memberships(organization_id,user_id,role) VALUES ($1,$2,$3)", org.ID, ownerID, domain.RoleOwner); err != nil {
 		return err
 	}
+	if _, err := tx.ExecContext(ctx, "INSERT INTO audit_events(organization_id,actor_user_id,action,resource_id) VALUES ($1,$2,$3,$4)", org.ID, ownerID, "organization.created", org.ID); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 
