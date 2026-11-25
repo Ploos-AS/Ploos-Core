@@ -1,0 +1,28 @@
+name: Publish pilot image
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        run: |
+          docker build -t ghcr.io/ploos-as/ploos-core:sha-${GITHUB_SHA} .
+          docker run -d --name core-release -p 127.0.0.1:18080:8080 ghcr.io/ploos-as/ploos-core:sha-${GITHUB_SHA}
+          curl --retry 15 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:18080/healthz
+          test "$(docker exec core-release id -u)" = 65532
+      - name: Publish
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push ghcr.io/ploos-as/ploos-core:sha-${GITHUB_SHA}
+          docker logout ghcr.io
+      - name: Cleanup
+        if: always()
+        run: docker rm -f core-release || true
