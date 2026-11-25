@@ -26,6 +26,10 @@ Identity authentication is an external integration, with Core responsible for id
 - `docs/architecture.md`: system boundaries, flows, and rollout plan.
 - `docs/decisions/0001-modular-monolith.md`: initial architecture decision.
 
+## Roadmap
+
+See [pilot roadmap and readiness gates](docs/roadmap.md).
+
 ## Development
 
 Go 1.24+ is the initial implementation language. Run `go test ./...` locally.
